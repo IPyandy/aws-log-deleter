@@ -16,16 +16,19 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 )
 
 func main() {
+
+	region := flag.String("region", "", "--region=[AWS-REGION], defaults to aws config profile")
+	flag.Parse()
 
 	// Set background context, concurrency safety
 	ctx := context.Background()
@@ -38,8 +41,10 @@ func main() {
 		log.Fatalf("Unable to load SDK config %v\n", err)
 	}
 
-	// TODO: add cli flag to specify region or get from profile
-	cfg.Region = endpoints.UsEast2RegionID
+	// If region flag is set
+	if *region != "" {
+		cfg.Region = *region
+	}
 
 	// Create cloudwatch client
 	cw := cloudwatchlogs.New(cfg)
