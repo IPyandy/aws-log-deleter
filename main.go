@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
@@ -49,6 +50,25 @@ func main() {
 	// Create cloudwatch client
 	cw := cloudwatchlogs.New(cfg)
 
+	lg := getLogGroups(ctx, cw)
+
+	// check if there are log groups to delete
+	if len(lg) > 0 {
+		deleteLogGroups(ctx, lg, cw)
+
+		return
+	}
+
+	fmt.Println("No log groups to delete")
+}
+
+// getLogGroups returns the logGroups if any acquired from the call to AWS CloudWatch-Logs
+func getLogGroups(ctx context.Context, cw *cloudwatchlogs.CloudWatchLogs) []cloudwatchlogs.LogGroup {
+
+	// will cancel request after 2 seconds if log groups are not received
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
 	// parameters for filtering the log groups
 	limit := aws.Int64(50)
 	params := cloudwatchlogs.DescribeLogGroupsInput{
@@ -62,19 +82,15 @@ func main() {
 		log.Fatalf("Unable to request logs %v\n", err)
 	}
 
-	// check if there are log groups to delete
-	if len(resp.LogGroups) > 0 {
-		deleteLogGroups(resp.LogGroups, cw)
-
-		return
-	}
-
-	fmt.Println("No log groups to delete")
+	return resp.LogGroups
 }
 
 // deleteLogGroups runs the delete operation on l[] for each group contianed
-func deleteLogGroups(l []cloudwatchlogs.LogGroup, cw *cloudwatchlogs.CloudWatchLogs) {
-	ctx := context.Background()
+func deleteLogGroups(ctx context.Context, l []cloudwatchlogs.LogGroup, cw *cloudwatchlogs.CloudWatchLogs) {
+
+	// will cancel deletion after 10 seconds of activity (in case of hung process)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
 	// go through each log group
 	for _, v := range l {
