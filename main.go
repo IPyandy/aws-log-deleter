@@ -37,6 +37,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to load SDK config %v\n", err)
 	}
+
+	// TODO: add cli flag to specify region or get from profile
 	cfg.Region = endpoints.UsEast2RegionID
 
 	// Create cloudwatch client
