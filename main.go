@@ -35,7 +35,7 @@ func main() {
 	// set the region
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
-		log.Fatalf("unable to load SDK config %v", err)
+		log.Fatalf("Unable to load SDK config %v\n", err)
 	}
 	cfg.Region = endpoints.UsEast2RegionID
 
@@ -52,22 +52,31 @@ func main() {
 	a := cw.DescribeLogGroupsRequest(&params)
 	resp, err := a.Send(ctx)
 	if err != nil {
-		log.Fatalf("unable to request logs %v", err)
+		log.Fatalf("Unable to request logs %v\n", err)
 	}
 
+	// check if there are log groups to delete
 	if len(resp.LogGroups) > 0 {
+		// go through each log group
 		for _, v := range resp.LogGroups {
-			d := &cloudwatchlogs.DeleteLogGroupInput{
-				LogGroupName: v.LogGroupName,
+
+			name := v.LogGroupName
+			params := &cloudwatchlogs.DeleteLogGroupInput{
+				LogGroupName: name,
 			}
-			del := cw.DeleteLogGroupRequest(d)
-			o, err := del.Send(ctx)
+
+			// Create delete request
+			del := cw.DeleteLogGroupRequest(params)
+			// Send the request to delete the log group
+			_, err := del.Send(ctx)
 			if err != nil {
-				log.Fatalf("could not delete log group %v", err)
+				log.Fatalf("Could not delete log group %v\n", err)
 			}
-			fmt.Printf("Deleted log group %v", o.GoString())
+			fmt.Printf("Deleted log group %v\n", *name)
 		}
+
+		return
 	}
 
-	fmt.Println("no log groups to delete")
+	fmt.Println("No log groups to delete")
 }
