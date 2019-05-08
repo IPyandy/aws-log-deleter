@@ -56,34 +56,41 @@ func main() {
 	}
 
 	// Create a request for the log groups within a region
-	a := cw.DescribeLogGroupsRequest(&params)
-	resp, err := a.Send(ctx)
+	logReq := cw.DescribeLogGroupsRequest(&params)
+	resp, err := logReq.Send(ctx)
 	if err != nil {
 		log.Fatalf("Unable to request logs %v\n", err)
 	}
 
 	// check if there are log groups to delete
 	if len(resp.LogGroups) > 0 {
-		// go through each log group
-		for _, v := range resp.LogGroups {
-
-			name := v.LogGroupName
-			params := &cloudwatchlogs.DeleteLogGroupInput{
-				LogGroupName: name,
-			}
-
-			// Create delete request
-			del := cw.DeleteLogGroupRequest(params)
-			// Send the request to delete the log group
-			_, err := del.Send(ctx)
-			if err != nil {
-				log.Fatalf("Could not delete log group %v\n", err)
-			}
-			fmt.Printf("Deleted log group %v\n", *name)
-		}
+		deleteLogGroups(resp.LogGroups, cw)
 
 		return
 	}
 
 	fmt.Println("No log groups to delete")
+}
+
+// deleteLogGroups runs the delete operation on l[] for each group contianed
+func deleteLogGroups(l []cloudwatchlogs.LogGroup, cw *cloudwatchlogs.CloudWatchLogs) {
+	ctx := context.Background()
+
+	// go through each log group
+	for _, v := range l {
+
+		name := v.LogGroupName
+		params := &cloudwatchlogs.DeleteLogGroupInput{
+			LogGroupName: name,
+		}
+
+		// Create delete request
+		del := cw.DeleteLogGroupRequest(params)
+		// Send the request to delete the log group
+		_, err := del.Send(ctx)
+		if err != nil {
+			log.Fatalf("Could not delete log group %v\n", err)
+		}
+		fmt.Printf("Deleted log group %v\n", *name)
+	}
 }
