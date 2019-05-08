@@ -30,5 +30,6 @@ an optional `-region` flag can be passed otherwise it will default to normal `aw
 - Otherwise it will be empty and program will panic if flag not set.
 
 ```shell
-aws-log-deleter -region=us-east-2 # flag -region flag is optional if above rules are met
+# flag -region is optional if above rules are met
+aws-log-deleter -region=us-east-2
 ```
