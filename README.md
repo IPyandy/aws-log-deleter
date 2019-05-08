@@ -16,6 +16,9 @@ go get -u github.com/IPyandy/aws-log-deleter
 
 ```shell
 git clone https://github.com/IPyandy/aws-log-deleter.git
+
+cd aws-log-deleter
+go install .
 ```
 
 ## Running
